@@ -1,0 +1,769 @@
+In this milestone, you will create a 10-15 slide PowerPoint presentation demonstrating your data collection about the final business analytics project. (Include title, introduction and conclusion)
+
+This is related to the final project because the final project is also a PowerPoint presentation. In that final project, you must submit your data and related work throughout this presentation.
+In this assignment, you will need to consider the following: 
+
+Relevant data sources, methods, and tools for collection (fraud detection dataset)
+Steps taken to clean and preprocess the collected data 
+Transformations applied to the data, feature engineering (new features from the data)
+Data combination from sources and compatibility (data integrity)
+Data quality assessment (plus bias, ethics) 
+Step 1. Create the PowerPoint Presentation 
+
+Step 2. Store your dataset on GitHub and share your finalized dataset. The finalized dataset should be cleaned, transformed, and integrated dataset (if possible), ready for analysis and modeling in the subsequent stages of the project. 
+
+Step 3: Share the Python Notebook used in the Exploratory data analysis 
+Store your dataset on GitHub and share your finalized dataset. The finalized dataset should be cleaned, transformed, and integrated dataset (if possible), ready for analysis and modeling in the subsequent stages of the project. 
+
+Share the Python Notebook used in the Exploratory data analysis 
+
+Fraud detection dataset from kaggle - https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud?resource=download
+
+https://github.com/mkazu1234/BAN6800_Assignments
+
+Give full python notebook code for slide 13 - 14, using the credit_card.csv dataset, applying it the slide where necessary. The finalized dataset. also give more deep details of slide 2-15
+
+Code 1 Py notebook
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.feature_selection import mutual_info_classif
+
+# Load the data
+df = pd.read_csv('credit_card.csv')
+
+# Data loading and initial inspection
+print(df.head())
+print(df.info())
+
+# Data cleaning and preprocessing steps
+# Handle missing values
+df = df.dropna()
+
+# Convert 'Time' to datetime
+df['Time'] = pd.to_datetime(df['Time'], unit='s')
+
+# Feature engineering process
+# Create hour of day feature
+df['Hour'] = df['Time'].dt.hour
+
+# Create day of week feature
+df['DayOfWeek'] = df['Time'].dt.dayofweek
+
+# Create amount bins
+df['AmountBin'] = pd.qcut(df['Amount'], q=5, labels=['Very Low', 'Low', 'Medium', 'High', 'Very High'])
+
+# Normalize 'Amount'
+scaler = StandardScaler()
+df['NormalizedAmount'] = scaler.fit_transform(df['Amount'].values.reshape(-1, 1))
+
+# Exploratory data analysis and visualizations
+# Distribution of transaction amounts
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Amount'], bins=50, kde=True)
+plt.title('Distribution of Transaction Amounts')
+plt.xlabel('Amount')
+plt.ylabel('Frequency')
+plt.show()
+
+# Fraud vs Non-Fraud transaction amounts
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Class', y='Amount', data=df)
+plt.title('Transaction Amounts: Fraud vs Non-Fraud')
+plt.ylabel('Amount')
+plt.show()
+
+# Correlation heatmap
+plt.figure(figsize=(12, 10))
+sns.heatmap(df.corr(), annot=True, cmap='coolwarm', linewidths=0.5)
+plt.title('Correlation Heatmap of Features')
+plt.show()
+
+# Time-based analysis
+plt.figure(figsize=(12, 6))
+df.groupby('Hour')['Class'].mean().plot()
+plt.title('Fraud Rate by Hour of Day')
+plt.xlabel('Hour of Day')
+plt.ylabel('Fraud Rate')
+plt.show()
+
+# Feature importance using mutual information
+X = df.drop(['Class', 'Time'], axis=1)
+y = df['Class']
+mi_scores = mutual_info_classif(X, y)
+mi_scores = pd.Series(mi_scores, name="MI Scores", index=X.columns)
+mi_scores = mi_scores.sort_values(ascending=False)
+
+plt.figure(figsize=(10, 6))
+mi_scores.plot.bar()
+plt.title('Feature Importance Based on Mutual Information')
+plt.xlabel('Features')
+plt.ylabel('Mutual Information Score')
+plt.show()
+
+# Print summary statistics
+print(df.describe())
+
+# Print class distribution
+print(df['Class'].value_counts(normalize=True))
+
+# Prepare data for modeling (next steps)
+X = df.drop(['Class', 'Time', 'AmountBin'], axis=1)
+y = df['Class']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+print("Training set shape:", X_train.shape)
+print("Testing set shape:", X_test.shape)
+
+Code 2 . Py  notebook - Used
+
+!pip install pandas numpy matplotlib seaborn scikit-learn
+
+# Step 1: Importing necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Step 2: Load the credit card fraud dataset
+# Ensure the file path to the dataset is correct when running in your environment
+df = pd.read_csv('credit_card.csv')
+
+# Step 3: Initial data exploration
+# Check the first few rows of the dataset
+print(df.head())
+
+# Check for missing values
+missing_values = df.isnull().sum()
+print(f"Missing values:\n{missing_values}")
+
+# Basic statistics of the dataset
+print(df.describe())
+
+# Step 4: Data cleaning
+# Since there are no missing values in the dataset, we don't need to handle any nulls
+# If there were missing values, you could handle them as follows:
+# df = df.fillna(df.mean()) or df.dropna()
+
+# Step 5: Feature scaling
+# Extracting the feature columns and the target variable (Class)
+X = df.drop('Class', axis=1)
+y = df['Class']
+
+# Standardize the features (mean=0, variance=1) using StandardScaler
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 6: Feature Engineering - PCA (Principal Component Analysis)
+# Reducing the number of features using PCA to explain variance in a reduced number of components
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# Visualize the first two principal components
+plt.figure(figsize=(10, 6))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='coolwarm', alpha=0.5)
+plt.title('PCA of Credit Card Fraud Dataset')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.colorbar(label='Class')
+plt.show()
+
+# Step 7: Data Splitting for Model Training
+# Splitting the dataset into training and testing sets (80/20 split)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42, stratify=y)
+
+# Step 8: Exploratory Data Analysis (EDA)
+# Class distribution
+plt.figure(figsize=(6, 4))
+sns.countplot(x='Class', data=df)
+plt.title('Class Distribution (Fraud vs Non-Fraud)')
+plt.show()
+
+# Transaction Amount Distribution
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Amount'], bins=50, kde=True)
+plt.title('Distribution of Transaction Amounts')
+plt.xlabel('Transaction Amount')
+plt.ylabel('Frequency')
+plt.show()
+
+# Time vs Amount Scatterplot
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Time'], df['Amount'], c=df['Class'], cmap='coolwarm', alpha=0.5)
+plt.title('Time vs Transaction Amount')
+plt.xlabel('Time (seconds)')
+plt.ylabel('Transaction Amount')
+plt.colorbar(label='Class')
+plt.show()
+
+# Step 9: Save the processed dataset
+# Create a DataFrame with scaled features and reattach the target column
+df_cleaned = pd.DataFrame(X_scaled, columns=df.columns[:-1])
+df_cleaned['Class'] = y.values
+df_cleaned.to_csv('cleaned_credit_card.csv', index=False)
+
+# Step 10: Summary of Dataset (For Slide 13)
+# Total number of transactions
+total_transactions = df.shape[0]
+
+# Number of fraudulent transactions
+fraud_transactions = df[df['Class'] == 1].shape[0]
+
+# Number of non-fraudulent transactions
+non_fraud_transactions = df[df['Class'] == 0].shape[0]
+
+print(f"Total Transactions: {total_transactions}")
+print(f"Fraudulent Transactions: {fraud_transactions}")
+print(f"Non-Fraudulent Transactions: {non_fraud_transactions}")
+
+# Final message
+print("Data cleaning, transformation, and feature engineering completed.")
+
+
+Module 4
+In milestone 1, you worked on getting the data ready for use in developing a model. This assignment requires you to develop a business analytics model with your data.
+In this assignment, you will be tasked with developing a business analytics model using a provided dataset. Your goal is to build a Jupyter Notebook that showcases your data analysis techniques, model development process, and evaluation methods. The assignment requires you to create a clear step-by-step plan, select appropriate data analysis tools, and host the code on GitHub. The final submission should include the model results, along with the previously submitted exploratory notebooks.
+Consider the following steps while completing your assignment.
+
+Step 1: Review and clean your data to make it ready for analysis.
+
+Step 2: Create a new Jupyter Notebook for the model development task.
+
+Step 3: Develop a clear and logical step-by-step plan for implementing the model.
+
+Step 4: Build and train the business analytics model using the data.
+
+Step 5: Evaluate the model's performance using relevant metrics.
+
+Step 6: Organize and document your Jupyter Notebook neatly.
+
+Submit the Jupyter Notebook with the data used. The submission needs to also include the previously submitted exploratory notebooks. Ensure the code is hosted on GitHub.
+
+Use code for mod 4
+!pip install pandas numpy matplotlib seaborn scikit-learn
+
+# Step 1: Data Review and Cleaning
+
+# Importing libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_auc_score, roc_curve
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.model_selection import GridSearchCV
+
+# Load the dataset (make sure path is correct)
+df = pd.read_csv('cleaned_creditcard.csv')
+
+# Display the first few rows of the dataset
+df.head()
+
+# Data overview
+df.info()
+
+# Check for missing values
+print(f"Missing values:\n{df.isnull().sum()}")
+
+# Step 2: Data Cleaning (remove duplicates, check data types, handle missing data)
+# Check for duplicate records
+duplicates = df.duplicated().sum()
+print(f"Number of duplicate rows: {duplicates}")
+
+# Removing duplicates
+df.drop_duplicates(inplace=True)
+
+# Step 3: Exploratory Data Analysis (EDA)
+# Class distribution (fraud vs non-fraud)
+sns.countplot(x='Class', data=df)
+plt.title('Class Distribution: Fraud vs Non-Fraud Transactions')
+plt.show()
+
+# Transaction amount distribution
+sns.histplot(df['Amount'], bins=50, kde=True)
+plt.title('Transaction Amount Distribution')
+plt.show()
+
+# Correlation matrix
+plt.figure(figsize=(12, 8))
+sns.heatmap(df.corr(), annot=False, cmap='coolwarm', square=True)
+plt.title('Correlation Matrix')
+plt.show()
+
+# Step 4: Preprocessing (scaling)
+# Define the features and target
+X = df.drop(['Class'], axis=1)
+y = df['Class']
+
+# Scaling the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 5: Principal Component Analysis (PCA)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# Visualize the first two principal components
+plt.figure(figsize=(10, 6))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='coolwarm', alpha=0.7)
+plt.title('PCA - First Two Components')
+plt.xlabel('First Principal Component')
+plt.ylabel('Second Principal Component')
+plt.colorbar(label='Fraud Class')
+plt.show()
+
+# Step 6: Model Development
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+# Logistic Regression Model
+log_reg = LogisticRegression()
+log_reg.fit(X_train, y_train)
+
+# Random Forest Classifier
+rf = RandomForestClassifier(random_state=42)
+rf.fit(X_train, y_train)
+
+# Gradient Boosting Classifier
+gbc = GradientBoostingClassifier(random_state=42)
+gbc.fit(X_train, y_train)
+
+# Step 7: Model Evaluation
+# Logistic Regression Evaluation
+y_pred_log_reg = log_reg.predict(X_test)
+print("Logistic Regression Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_log_reg)}")
+print(f"Classification Report:\n{classification_report(y_test, y_pred_log_reg)}")
+
+# Random Forest Evaluation
+y_pred_rf = rf.predict(X_test)
+print("Random Forest Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_rf)}")
+print(f"Classification Report:\n{classification_report(y_test, y_pred_rf)}")
+
+# Gradient Boosting Evaluation
+y_pred_gbc = gbc.predict(X_test)
+print("Gradient Boosting Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_gbc)}")
+print(f"Classification Report:\n{classification_report(y_test, y_pred_gbc)}")
+
+# Confusion Matrix for Logistic Regression
+conf_matrix = confusion_matrix(y_test, y_pred_log_reg)
+sns.heatmap(conf_matrix, annot=True, fmt="d", cmap="YlGnBu", cbar=False)
+plt.title('Confusion Matrix - Logistic Regression')
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
+plt.show()
+
+# ROC Curve and AUC for Random Forest
+y_pred_proba = rf.predict_proba(X_test)[:, 1]
+fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+roc_auc = roc_auc_score(y_test, y_pred_proba)
+
+plt.figure(figsize=(10, 6))
+plt.plot(fpr, tpr, label=f'Random Forest (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend()
+plt.show()
+
+# Step 8: Hyperparameter Tuning with GridSearchCV (Example for Random Forest)
+param_grid = {
+    'n_estimators': [100, 200],
+    'max_depth': [10, 20, None],
+    'min_samples_split': [2, 5]
+}
+
+grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3, scoring='accuracy')
+grid_search.fit(X_train, y_train)
+
+# Best parameters found
+print(f"Best parameters for Random Forest: {grid_search.best_params_}")
+
+# Use the tuned Random Forest for evaluation
+best_rf = grid_search.best_estimator_
+y_pred_best_rf = best_rf.predict(X_test)
+print(f"Tuned Random Forest Performance: {accuracy_score(y_test, y_pred_best_rf)}")
+
+
+FINAL DATA COLLECTION/CLEANING USE:
+!pip install pandas numpy matplotlib seaborn scikit-learn
+
+# Step 1: Importing necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Step 2: Load the credit card fraud dataset
+# Ensure the file path to the dataset is correct when running in your environment
+df = pd.read_csv('credit_card.csv')
+
+# Step 3: Initial data exploration
+
+# Check the first few rows of the dataset
+print(df.head())
+
+# Check for missing values
+missing_values = df.isnull().sum()
+print(f"Missing values:\n{missing_values}")
+
+# Basic statistics of the dataset
+print(df.describe())
+
+# View the data
+df
+
+# Step 4: Data cleaning
+# Since there are no missing values in the dataset, we don't need to handle any nulls
+# If there were missing values, you could handle them as follows:
+# df = df.fillna(df.mean()) or df.dropna()
+
+# Check for duplicates
+df.duplicated().sum()
+
+# Drop duplicates
+df.drop_duplicates()
+
+# Step 5: Feature scaling
+# Extracting the feature columns and the target variable (Class)
+X = df.drop('Class', axis=1)
+y = df['Class']
+
+# Standardize the features (mean=0, variance=1) using StandardScaler
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 6: Feature Engineering - PCA (Principal Component Analysis)
+# Reducing the number of features using PCA to explain variance in a reduced number of components
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# Visualize the first two principal components
+plt.figure(figsize=(10, 6))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='coolwarm', alpha=0.5)
+plt.title('PCA of Credit Card Fraud Dataset')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.colorbar(label='Class')
+plt.show()
+
+# Step 7: Save the processed dataset
+# Create a DataFrame with scaled features and reattach the target column
+df_cleaned = pd.DataFrame(X_scaled, columns=df.columns[:-1])
+df_cleaned['Class'] = y.values
+df_cleaned.to_csv('cleaned_credit_card.csv', index=False)
+
+# Step 8: Summary of Dataset (For Slide 13)
+# Total number of transactions
+total_transactions = df.shape[0]
+
+print(f"Total Transactions: {total_transactions}")
+
+# Final message
+print("Data cleaning, transformation, and feature engineering completed.")
+
+Module 4 Q
+In this assignment, you will be tasked with developing a business analytics model using a provided dataset. Your goal is to build a Jupyter Notebook that showcases your data analysis techniques, model development process, and evaluation methods. The assignment requires you to create a clear step-by-step plan, select appropriate data analysis tools, and host the code on GitHub. The final submission should include the model results, along with the previously submitted exploratory notebooks.
+Consider the following steps while completing your assignment.
+
+Step 1: Review and clean your data to make it ready for analysis.
+
+Step 2: Create a new Jupyter Notebook for the model development task.
+
+Step 3: Develop a clear and logical step-by-step plan for implementing the model.
+
+Step 4: Build and train the business analytics model using the data.
+
+Step 5: Evaluate the model's performance using relevant metrics.
+
+Step 6: Organize and document your Jupyter Notebook neatly.
+
+Submit the Jupyter Notebook with the data used. The submission needs to also include the previously submitted exploratory notebooks. Ensure the code is hosted on GitHub.
+
+From this code, integrate model developement, and evaluation using logistic regression and xgboost. 
+!pip install pandas numpy matplotlib seaborn scikit-learn
+
+# Step 1: Importing necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
+# Step 2: Load the credit card fraud dataset
+# Ensure the file path to the dataset is correct when running in your environment
+df = pd.read_csv('cleaned_credit_card.csv')
+
+# Step 3: Initial data exploration
+# Check the first few rows of the dataset
+print(df.head())
+
+# Check for missing values
+missing_values = df.isnull().sum()
+print(f"Missing values:\n{missing_values}")
+
+# Basic statistics of the dataset
+print(df.describe())
+
+# Step 4: Data cleaning
+# Since there are no missing values in the dataset, we don't need to handle any nulls
+# If there were missing values, you could handle them as follows:
+# df = df.fillna(df.mean()) or df.dropna()
+
+# Check for duplicates
+df.duplicated().sum()
+
+# Removes any duplicate rows
+df.drop_duplicates()
+
+# Step 5: Feature scaling
+# Extracting the feature columns and the target variable (Class)
+X = df.drop('Class', axis=1)
+y = df['Class']
+
+# Standardize the features (mean=0, variance=1) using StandardScaler
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 6: Feature Engineering - PCA (Principal Component Analysis)
+# Reducing the number of features using PCA to explain variance in a reduced number of components
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# Visualize the first two principal components
+plt.figure(figsize=(10, 6))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='coolwarm', alpha=0.5)
+plt.title('PCA of Credit Card Fraud Dataset')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.colorbar(label='Class')
+plt.show()
+
+# Step 7: Data Splitting for Model Training
+# Splitting the dataset into training and testing sets (80/20 split)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42, stratify=y)
+
+# Step 8: Exploratory Data Analysis (EDA)
+# Class distribution
+plt.figure(figsize=(6, 4))
+sns.countplot(x='Class', data=df)
+plt.title('Class Distribution (Fraud vs Non-Fraud)')
+plt.show()
+
+# Transaction Amount Distribution
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Amount'], bins=50, kde=True)
+plt.title('Distribution of Transaction Amounts')
+plt.xlabel('Transaction Amount')
+plt.ylabel('Frequency')
+plt.show()
+
+# Time vs Amount Scatterplot
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Time'], df['Amount'], c=df['Class'], cmap='coolwarm', alpha=0.5)
+plt.title('Time vs Transaction Amount')
+plt.xlabel('Time (seconds)')
+plt.ylabel('Transaction Amount')
+plt.colorbar(label='Class')
+plt.show()
+
+# Step 9: Save the processed dataset
+# Create a DataFrame with scaled features and reattach the target column
+df_cleaned = pd.DataFrame(X_scaled, columns=df.columns[:-1])
+df_cleaned['Class'] = y.values
+df_cleaned.to_csv('cleaned_credit_card.csv', index=False)
+
+# Step 10: Summary of Dataset (For Slide 13)
+# Total number of transactions
+total_transactions = df.shape[0]
+
+# Number of fraudulent transactions
+fraud_transactions = df[df['Class'] == 1].shape[0]
+
+# Number of non-fraudulent transactions
+non_fraud_transactions = df[df['Class'] == 0].shape[0]
+
+print(f"Total Transactions: {total_transactions}")
+print(f"Fraudulent Transactions: {fraud_transactions}")
+print(f"Non-Fraudulent Transactions: {non_fraud_transactions}")
+
+# Final message
+print("Data cleaning, transformation, and feature engineering completed
+
+
+
+
+FINAL MODULE 4 CODE - USE THIS
+
+# Step 1: Importing necessary libraries
+!pip install pandas numpy matplotlib seaborn scikit-learn xgboost
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, roc_auc_score, roc_curve
+from xgboost import XGBClassifier
+
+# Step 2: Load the credit card fraud dataset
+# Ensure the file path to the dataset is correct when running in your environment
+df = pd.read_csv('cleaned_credit_card.csv')
+
+# Step 3: Initial data exploration
+print("First few rows of the dataset:")
+print(df.head())
+
+print("\nMissing values check:")
+missing_values = df.isnull().sum()
+print(f"Missing values:\n{missing_values}")
+
+print("\nBasic statistics of the dataset:")
+print(df.describe())
+
+# Step 4: Data cleaning
+# Check for duplicates and remove them
+df = df.drop_duplicates()
+
+# Step 5: Feature scaling
+# Extracting the feature columns and the target variable (Class)
+X = df.drop('Class', axis=1)
+y = df['Class']
+
+# Standardize the features (mean=0, variance=1) using StandardScaler
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 6: Feature Engineering - PCA (Principal Component Analysis)
+# Reducing the number of features using PCA to explain variance in a reduced number of components
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_scaled)
+
+# Visualize the first two principal components
+plt.figure(figsize=(10, 6))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='coolwarm', alpha=0.5)
+plt.title('PCA of Credit Card Fraud Dataset')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.colorbar(label='Class')
+plt.show()
+
+# Step 7: Data Splitting for Model Training
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42, stratify=y)
+
+# Step 8: Exploratory Data Analysis (EDA)
+# Class distribution
+plt.figure(figsize=(6, 4))
+sns.countplot(x='Class', data=df)
+plt.title('Class Distribution (Fraud vs Non-Fraud)')
+plt.show()
+
+# Transaction Amount Distribution
+plt.figure(figsize=(10, 6))
+sns.histplot(df['Amount'], bins=50, kde=True)
+plt.title('Distribution of Transaction Amounts')
+plt.xlabel('Transaction Amount')
+plt.ylabel('Frequency')
+plt.show()
+
+# Time vs Amount Scatterplot
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Time'], df['Amount'], c=df['Class'], cmap='coolwarm', alpha=0.5)
+plt.title('Time vs Transaction Amount')
+plt.xlabel('Time (seconds)')
+plt.ylabel('Transaction Amount')
+plt.colorbar(label='Class')
+plt.show()
+
+# Model Development
+
+# Step 9: Logistic Regression Model
+logreg = LogisticRegression(random_state=42)
+logreg.fit(X_train, y_train)
+
+# Evaluate Logistic Regression
+y_pred_logreg = logreg.predict(X_test)
+accuracy_logreg = accuracy_score(y_test, y_pred_logreg)
+roc_auc_logreg = roc_auc_score(y_test, logreg.predict_proba(X_test)[:, 1])
+
+print(f"\nLogistic Regression Accuracy: {accuracy_logreg:.4f}")
+print(f"Logistic Regression ROC-AUC Score: {roc_auc_logreg:.4f}")
+print("\nLogistic Regression Classification Report:")
+print(classification_report(y_test, y_pred_logreg))
+
+# Confusion Matrix for Logistic Regression
+print("Logistic Regression Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred_logreg))
+
+# Plot ROC Curve for Logistic Regression
+fpr, tpr, _ = roc_curve(y_test, logreg.predict_proba(X_test)[:, 1])
+plt.figure(figsize=(10, 6))
+plt.plot(fpr, tpr, label=f'Logistic Regression (AUC = {roc_auc_logreg:.2f})')
+plt.plot([0, 1], [0, 1], 'k--')
+plt.title('ROC Curve - Logistic Regression')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+plt.show()
+
+# Step 10: XGBoost Model
+xgb_model = XGBClassifier(random_state=42, use_label_encoder=False, eval_metric='logloss')
+xgb_model.fit(X_train, y_train)
+
+# Evaluate XGBoost
+y_pred_xgb = xgb_model.predict(X_test)
+accuracy_xgb = accuracy_score(y_test, y_pred_xgb)
+roc_auc_xgb = roc_auc_score(y_test, xgb_model.predict_proba(X_test)[:, 1])
+
+print(f"\nXGBoost Accuracy: {accuracy_xgb:.4f}")
+print(f"XGBoost ROC-AUC Score: {roc_auc_xgb:.4f}")
+print("\nXGBoost Classification Report:")
+print(classification_report(y_test, y_pred_xgb))
+
+# Confusion Matrix for XGBoost
+print("XGBoost Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred_xgb))
+
+# Plot ROC Curve for XGBoost
+fpr_xgb, tpr_xgb, _ = roc_curve(y_test, xgb_model.predict_proba(X_test)[:, 1])
+plt.figure(figsize=(10, 6))
+plt.plot(fpr_xgb, tpr_xgb, label=f'XGBoost (AUC = {roc_auc_xgb:.2f})')
+plt.plot([0, 1], [0, 1], 'k--')
+plt.title('ROC Curve - XGBoost')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend(loc='best')
+plt.show()
+
+# Step 11: Summary Statistics
+total_transactions = df.shape[0]
+fraud_transactions = df[df['Class'] == 1].shape[0]
+non_fraud_transactions = df[df['Class'] == 0].shape[0]
+
+print(f"\nTotal Transactions: {total_transactions}")
+print(f"Fraudulent Transactions: {fraud_transactions}")
+print(f"Non-Fraudulent Transactions: {non_fraud_transactions}")
